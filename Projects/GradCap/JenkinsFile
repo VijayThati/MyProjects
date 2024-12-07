@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/rahulcbu/Gradcap.git'
+            }
+        }
+        
+        stage('Docker Login') {
+            steps {
+                script {
+                    // Docker login command
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh "docker login -u cappro -p admin12345"
+                    }
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Run Docker container and redirect logs to a file
+                    sh 'docker run -p 80:8001 gradapp:v1 > docker_logs.txt 2>&1 &'
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+    }
+}
